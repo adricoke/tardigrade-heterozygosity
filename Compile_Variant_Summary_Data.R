@@ -15,6 +15,7 @@ data_files <- dir(main_dir, recursive=T, include.dirs=T, pattern="heterozygous_v
 data_files
 
 ## Extract info from file path
+# assumes file path structure is: .../species_replicate/heterozygous_variants.csv
 species = NULL
 replicates = NULL
 for (file in data_files) {
@@ -195,7 +196,8 @@ bulk_overlap_single_high_impact <- bulk_overlap_single %>%
 
 ### Save Data ###
 
-fileName <- "high_impact_variants_for_mRNA_search.csv"
+# fileName <- "high_impact_variants_for_mRNA_search.csv"
+fileName <- "select_high_impact_variants.csv"
 write.csv(bulk_overlap_single_high_impact, fileName, row.names = FALSE)
 
 

@@ -16,7 +16,9 @@ head(gene_tpm_ranks_per_sample)
 gene_expression_rank_overall <- read.csv("gene_expression_rank_overall.csv")
 head(gene_expression_rank_overall)
 
-genes_with_confident_high_impact_variants <- read.csv("../NCBI_genome_results/20251204_select_high_impact_variants_with_goslim.csv") %>%
+fileName <- "select_high_impact_variants.csv"
+# genes_with_confident_high_impact_variants <- read.csv("../NCBI_genome_results/20251204_select_high_impact_variants_with_goslim.csv") %>%
+genes_with_confident_high_impact_variants <- read.csv(paste0("../NCBI_genome_results/", fileName)) %>%
   select(Gene_ID, Annotation, AA_pos, Uniprot_Protein_Annotation, Gene_Ontology, GO_slim)
 head(genes_with_confident_high_impact_variants)
 

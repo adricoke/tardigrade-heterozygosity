@@ -37,8 +37,9 @@ cbPalette <- c("#999999", "#56B4E9", "#E69F00", "#CC79A7", "#009E73")
 # Read in & Organize Data File(s)
 ###############################################################################
 
-fileName <- "20251118_annotated_high_impact_variants_for_mRNA_search.csv"
+# fileName <- "20251118_annotated_high_impact_variants_for_mRNA_search.csv"
 # fileName <- "20251204_select_high_impact_variants_with_goslim.csv"
+fileName <- "select_high_impact_variants.csv"
 high_impact_variants = read.csv(fileName, header=T)
 head(high_impact_variants)
 
