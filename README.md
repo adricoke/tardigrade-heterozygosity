@@ -39,11 +39,11 @@ Analyze_Tardigrade_High_Impact_Variants.R
 - Reads in select_high_impact_variants.csv
 - Makes plots to categorize and analyze select high-impact variants
 
-**Analyze RNA expression of select variants**
+**Analyze RNA expression of select variants:**
 
 ...
 
-**Analyze results of PCR sequencing and inheritance tracking of select loci**
+**Analyze results of PCR sequencing and inheritance tracking of select loci:**
 
 ...
 
