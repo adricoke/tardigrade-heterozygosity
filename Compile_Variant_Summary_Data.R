@@ -2,15 +2,19 @@
 library(tidyverse)
 
 ###############################################################################
-# Step 1. Find File locations and treatments
+# User Settings (change if needed)
 ###############################################################################
 
 ## Set working directory
 setwd("/work/users/a/d/adricoke/single_tardigrade_seq_analysis/NCBI_genome_results")
 main_dir = getwd()
 
+###############################################################################
+# Step 1. Find File locations and treatments
+###############################################################################
+
 ## Identify files
-# variant_summary.csv includes only filtered variants (QUAL>=30, depth>=40, heterozygous-only sites)
+# heterozygous_variants.csv includes only filtered variants (QUAL>=30, depth>=40, heterozygous-only sites)
 data_files <- dir(main_dir, recursive=T, include.dirs=T, pattern="heterozygous_variants.csv", full.names=T)
 data_files
 
@@ -132,15 +136,7 @@ shared_variants <- df %>%
   distinct(species, scaffold, position, REF, ALT, .keep_all = TRUE) %>%
   select(-replicate)                      # drop replicate info
 
-head(shared_variants)
-
-# # check how many of each type of variant are in new df
-# variant_counts <- shared_variants %>%
-#   # count(Annotation, sort = TRUE)
-#   count(Annotation_Impact, sort = TRUE)
-# print(variant_counts, n = 27)
-
-# high_impact_variants <- subset(shared_variants, Annotation_Impact == "HIGH")
+# head(shared_variants)
 
 ### Save Data ###
 
@@ -171,7 +167,7 @@ write.csv(bulk_shared_variants, "He_variants_shared_in_all_bulk_seq_samples.csv"
 
 ###############################################################################
 
-### 3/3: Filter to only HIGH-IMPACT variants shared across all 3 BULK tardigrade samples AND one single-tardigrade replicate ###
+### Filter to only HIGH-IMPACT variants shared across all 3 BULK tardigrade samples AND one single-tardigrade replicate ###
 
 # Make a subset of single-tardigrade data
 single <- df %>% 
@@ -196,7 +192,6 @@ bulk_overlap_single_high_impact <- bulk_overlap_single %>%
 
 ### Save Data ###
 
-# fileName <- "high_impact_variants_for_mRNA_search.csv"
 fileName <- "select_high_impact_variants.csv"
 write.csv(bulk_overlap_single_high_impact, fileName, row.names = FALSE)
 

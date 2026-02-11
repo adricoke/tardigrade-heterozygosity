@@ -8,12 +8,16 @@ library(stringr)
 library(purrr)
 
 ###############################################################################
-# Find File locations and treatments
+# User Settings (change if needed)
 ###############################################################################
 
 ## Set working directory
 setwd("/work/users/a/d/adricoke/single_tardigrade_seq_analysis/rna_expression_analysis_results")
 main_dir = getwd()
+
+###############################################################################
+# Find File locations and treatments
+###############################################################################
 
 ## Identify sample files
 data_files <- dir(main_dir, recursive=T, include.dirs=T, pattern="quant.sf", full.names=T)
@@ -25,7 +29,7 @@ citations = NULL
 sample_descriptions = NULL
 replicates = NULL
 for (file in data_files) {
-  temp <- temp <- basename(dirname(file))
+  temp <- basename(dirname(file))
   sample_names <- c(sample_names, temp)
   citations <- c(citations, unlist(strsplit(temp, "_"))[1])
   sample_descriptions <- c(sample_descriptions, unlist(strsplit(temp, "_"))[2])
@@ -58,10 +62,10 @@ clean_ids <- sub("^gene-", "", rownames(txi$abundance))
 rownames(txi$abundance) <- clean_ids
 
 gene_tpm_mat <- txi$abundance  # genes x samples, TPM
-head(gene_tpm_mat)
+# head(gene_tpm_mat)
 gene_tpm_df  <- data.frame(gene_id = rownames(gene_tpm_mat), gene_tpm_mat,
                            check.names = FALSE)
-head(gene_tpm_df)
+# head(gene_tpm_df)
 
 ## Per-sample rankings: rank, percentile, z-score (TPM-based)
 epsilon <- 1e-6
@@ -83,7 +87,7 @@ gene_tpm_long <- gene_tpm_df %>%
     zscore     = (logTPM - mean(logTPM)) / sd(logTPM)
   ) %>%
   dplyr::ungroup()
-head(gene_tpm_long)
+# head(gene_tpm_long)
 
 ## Overall rankings across samples (mean/median/geometric mean TPM)
 gene_stats <- gene_tpm_long %>%
@@ -105,7 +109,7 @@ gene_stats <- gene_tpm_long %>%
     rank_geoMeanTPM  = rank(-geo_mean_TPM, ties.method = "min"),
     rank_byAvgRank   = rank(mean_rank, ties.method = "min")   # lower mean_rank = higher expression
   )
-head(gene_stats)
+# head(gene_stats)
 
 ###############################################################################
 # Save outputs as csv's
@@ -119,9 +123,9 @@ write.csv(gene_stats, file.path(main_dir, "gene_expression_rank_overall.csv"),
 write.csv(gene_tpm_df, file.path(main_dir, "gene_tpm_matrix.csv"),
           row.names = FALSE)
 
-head(gene_tpm_long)
-head(gene_stats)
-head(gene_tpm_df)
+# head(gene_tpm_long)
+# head(gene_stats)
+# head(gene_tpm_df)
 
 
 

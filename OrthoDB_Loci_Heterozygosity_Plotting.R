@@ -147,15 +147,6 @@ BUSCO_loci_longer$Locus <- recode(BUSCO_loci_longer$Locus,
 ###############################################################################
 # Make Plots
 ###############################################################################
-
-# ## Number of SNPs per BUSCO locus (entire locus vs CDS only)
-# ggplot(BUSCO_loci_longer, aes(x=Locus, y=SNP_Count, fill=Region)) +
-#   geom_bar(stat="identity", position=position_dodge()) +
-#   scale_fill_manual(values=c("#56B4E9", "#E69F00")) +
-#   labs(x="BUSCO Locus", y="Number of SNPs", fill="Region")
-
-
-###############################################################################
 ## Proportion of SNPs per length (not including large indels)
 
 # v1: as percentage (SNPs per bp * 100 = % of heterozygous bases)
@@ -193,48 +184,6 @@ ggplot(BUSCO_loci_longer, aes(x=Locus,
 plot_title <- 'BUSCO_Loci_Heterozygosity_Percentage_ignore_indels'
 ggsave(paste0(plots_dir, "/", plot_title, '.png'), width=5, height=2.5)
 ggsave(paste0(plots_dir, "/", plot_title, '.pdf'), width=5, height=2.5)
-
-
-
-
-###############################################################################
-# ## Proportion of SNPs per length (including large indels)
-# # as percentage (SNPs per bp * 100 = % of heterozygous bases)
-# ggplot(BUSCO_loci_longer, aes(x=Locus, y=SNPs_per_bp_include_indels*100, fill=Region)) +
-#   geom_bar(stat="identity", position=position_dodge()) +
-#   scale_fill_manual(values=c("#56B4E9", "#E69F00")) +
-#   # label bars with heterozygosity percentage values
-#   geom_text(aes(label=percent(SNPs_per_bp_include_indels, accuracy=0.01)),
-#             position=position_dodge(width=0.9),
-#             vjust=-0.25, size=3) +
-#   # expand top of plot slightly for bar labels
-#   scale_y_continuous(expand=expansion(mult=c(0, 0.1))) +
-#   labs(x="Locus", y="% of Heterozygous Bases", fill="Region")
-# # save plot
-# plot_title <- 'BUSCO_Loci_Heterozygosity_Percentage_include_indels'
-# ggsave(paste0(plots_dir, "/", plot_title, '.png'), width=4, height=2.5)
-# ggsave(paste0(plots_dir, "/", plot_title, '.pdf'), width=4, height=2.5)
-
-###############################################################################
-# ## Proportion of polymorphisms (SNPs + non-SNP indels) per length (including large indels)
-# # as percentage (polymorphisms per bp * 100 = % of heterozygous bases)
-# ggplot(BUSCO_loci_longer, aes(x=Locus, y=Polymorphisms_per_bp_include_indels*100, fill=Region)) +
-#   geom_bar(stat="identity", position=position_dodge()) +
-#   scale_fill_manual(values=c("#56B4E9", "#E69F00")) +
-#   # label bars with heterozygosity percentage values
-#   geom_text(aes(label=percent(Polymorphisms_per_bp_include_indels, accuracy=0.01)),
-#             position=position_dodge(width=0.9),
-#             vjust=-0.25, size=3) +
-#   # expand top of plot slightly for bar labels
-#   scale_y_continuous(expand=expansion(mult=c(0, 0.1))) +
-#   labs(x="Locus", y="Heterozygosity (%)", fill="Region")
-# # save plot
-# plot_title <- 'BUSCO_Loci_Polymorphisms_Percentage_include_indels'
-# ggsave(paste0(plots_dir, "/", plot_title, '.png'), width=4, height=2.5)
-# ggsave(paste0(plots_dir, "/", plot_title, '.pdf'), width=4, height=2.5)
-
-
-
 
 
 ###############################################################################

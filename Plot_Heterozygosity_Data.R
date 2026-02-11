@@ -136,68 +136,7 @@ heterozygosity_binned <- heterozygosity_binned_all_reps %>%
 head(heterozygosity_binned)
 
 ###############################################################################
-# Analyze Heterozygosity Summary Data
-###############################################################################
-
-# ## plot heterozygosity % per unique: method, replicate, reference, CDS filter
-# ggplot(heterozygosity_summary_all_reps, aes(x=method,
-#                                             y=heterozygosity_fraction*100,
-#                                             fill=factor(replicate))) +
-#   geom_bar(stat="identity", position=position_dodge()) +
-#   facet_grid(rows=vars(reference), cols=vars(CDS_filter)) +
-#   # add labels to bars
-#   geom_text(aes(label=sprintf("%.2f", heterozygosity_fraction*100)),
-#             position=position_dodge(width=0.9),
-#             vjust=-0.25,
-#             size=3) +
-#   labs(x="Sample ID", y="Heterozygosity (%)", fill="Replicate") +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-# 
-# ## impact of CDS filter on heterozygosity measurement per sample
-# cds_filter_on <- heterozygosity_summary_all_reps %>%
-#   filter(CDS_filter == TRUE)
-# cds_fiter_off <- heterozygosity_summary_all_reps %>%
-#   filter(CDS_filter == FALSE)
-# cds_filter_on$CDS_filter_impact <- cds_filter_on$heterozygosity_fraction - cds_fiter_off$heterozygosity_fraction
-# ggplot(cds_filter_on, aes(x=method,
-#                           y=CDS_filter_impact*100,
-#                           fill=factor(replicate))) +
-#   geom_bar(stat="identity", position=position_dodge()) +
-#   facet_grid(rows=vars(reference)) +
-#   # add labels to bars
-#   geom_text(aes(label=sprintf("%.2f", CDS_filter_impact*100)),
-#             position=position_dodge(width=0.9),
-#             vjust=-0.25,
-#             size=3) +
-#   labs(x="Sample ID", y="Difference in Heterozygosity (%)", fill="Replicate",
-#        title = "Difference in Heterozygosity with vs without CDS filter") +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-# 
-# 
-# ## show mean heterozygosity across 4 samples, with and without CDS filter, for both references
-# head(heterozygosity_summary)
-# paste0("Mean heterozygosity across 4 single-tardigrade samples (CDS only, HiC ref): ",
-#        heterozygosity_summary$mean_heterozygosity_fraction[
-#          heterozygosity_summary$reference == "HiC" &
-#            heterozygosity_summary$method == "individual" &
-#            heterozygosity_summary$CDS_filter == TRUE]*100)
-# paste0("Mean heterozygosity across 4 single-tardigrade samples (all sites, HiC ref): ",
-#        heterozygosity_summary$mean_heterozygosity_fraction[
-#          heterozygosity_summary$reference == "HiC" &
-#            heterozygosity_summary$method == "individual" &
-#            heterozygosity_summary$CDS_filter == FALSE]*100)
-# paste0("Mean heterozygosity across 4 single-tardigrade samples (CDS only, NCBI ref): ",
-#        heterozygosity_summary$mean_heterozygosity_fraction[
-#          heterozygosity_summary$reference == "NCBI" &
-#            heterozygosity_summary$method == "individual" &
-#            heterozygosity_summary$CDS_filter == TRUE]*100)
-# paste0("Mean heterozygosity across 4 single-tardigrade samples (all sites, NCBI ref): ",
-#        heterozygosity_summary$mean_heterozygosity_fraction[
-#          heterozygosity_summary$reference == "NCBI" &
-#            heterozygosity_summary$method == "individual" &
-#            heterozygosity_summary$CDS_filter == FALSE]*100)
-
-
+# Make Plots
 ###############################################################################
 ## compare 4 single-tardigrade replicates, no CDS filter, both genomes:
 
@@ -265,7 +204,6 @@ plot_title <- "coverage_per_stwgs_replicate_vs_reference_allsites"
 ggsave(paste0(plot_title, '.png'), path = plots_dir, width=5, height=3)
 ggsave(paste0(plot_title, '.pdf'), path = plots_dir, width=5, height=3)
 
-
 ## correlate heterozygosity vs coverage across replicates
 ggplot(plotting_data, aes(x = mean_coverage,
                           y = heterozygosity_fraction*100,
@@ -315,7 +253,7 @@ mean_heterozygosity <- summary_data$mean_heterozygosity_fraction*100
 paste0("Mean heterozygosity across 4 individuals (CDS only): ", mean_heterozygosity)
 plot_title <- paste0("Het_across_genome_mean_of_stwgs_reps_CDSonly_",bin_size/1000,"kbBins")
 
-# all sites, mean of 4 sequenced individuals
+# OR all sites, mean of 4 sequenced individuals
 plotting_data <- heterozygosity_binned %>%
   subset(reference == "HiC" & method == "individual")
 summary_data <- heterozygosity_summary %>%

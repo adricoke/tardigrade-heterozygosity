@@ -12,17 +12,17 @@ setwd(main_dir)
 plots_dir = "C:/Users/addie/OneDrive - University of North Carolina at Chapel Hill/LAB/tardigrade_heterozygosity/He_FIGURE_PLOTS"
 
 gene_tpm_ranks_per_sample <- read.csv("gene_tpm_ranks_per_sample.csv")
-head(gene_tpm_ranks_per_sample)
+# head(gene_tpm_ranks_per_sample)
 gene_expression_rank_overall <- read.csv("gene_expression_rank_overall.csv")
-head(gene_expression_rank_overall)
+# head(gene_expression_rank_overall)
 
 fileName <- "select_high_impact_variants.csv"
 # genes_with_confident_high_impact_variants <- read.csv("../NCBI_genome_results/20251204_select_high_impact_variants_with_goslim.csv") %>%
 genes_with_confident_high_impact_variants <- read.csv(paste0("../NCBI_genome_results/", fileName)) %>%
   select(Gene_ID, Annotation, AA_pos, Uniprot_Protein_Annotation, Gene_Ontology, GO_slim)
-head(genes_with_confident_high_impact_variants)
+# head(genes_with_confident_high_impact_variants)
 
-genes_with_significant_truncations <- read.csv("../NCBI_genome_results/high_impact_variants_significant_truncations.csv")
+# genes_with_significant_truncations <- read.csv("../NCBI_genome_results/high_impact_variants_significant_truncations.csv")
 
 ###############################################################################
 # Rank-Order Genes with High-Impact Variants by Expression Level
@@ -58,15 +58,15 @@ variant_ranked <- gene_expression_rank_overall %>%
   )
 head(variant_ranked)
 
-# add metric to genes with significant truncations
-significant_genes_ranked <- genes_with_significant_truncations %>%
-  left_join(
-    variant_ranked %>%
-      select(gene_id, all_of(metric), genome_percentile_meanTPM),
-    by = c("Gene_ID" = "gene_id")
-  ) %>%
-  arrange(desc(.data[[metric]]))
-head(significant_genes_ranked)
+# # add metric to genes with significant truncations
+# significant_genes_ranked <- genes_with_significant_truncations %>%
+#   left_join(
+#     variant_ranked %>%
+#       select(gene_id, all_of(metric), genome_percentile_meanTPM),
+#     by = c("Gene_ID" = "gene_id")
+#   ) %>%
+#   arrange(desc(.data[[metric]]))
+# head(significant_genes_ranked)
 
 # (Optional) attach average percentile across samples from the per-sample table
 variant_avg_percentile <- gene_tpm_ranks_per_sample %>%
@@ -94,83 +94,6 @@ theme_update(text=element_text(size=10), # IS USUALLY 10
              strip.text = element_text(face = "bold"), # and bold text
              legend.key.size = unit(0.1, "in") # adjust legend sizing
 )
-###############################################################################
-### Plot distribution of mean_TPM (or other chosen metric) ###
-###############################################################################
-eps <- 1e-6
-
-# A) Histogram (log10 of the chosen metric) for variant genes
-ggplot(variant_ranked, aes(x = log10(.data[[metric]] + eps))) +
-  geom_histogram(binwidth = 0.2, fill = "#4378BF", color = "white", alpha = 0.85) +
-  labs(
-    title = paste0("Distribution of variant gene expression (", metric, ")"),
-    x = paste0("log10(", metric, " + ", eps, ")"),
-    y = "Count"
-  )
-
-# B) Density (same metric, log10)
-ggplot(variant_ranked, aes(x = log10(.data[[metric]] + eps))) +
-  geom_density(fill = "#72B7B2", alpha = 0.5, color = "#2C7FB8") +
-  labs(
-    title = paste0("Density of variant gene expression (", metric, ")"),
-    x = paste0("log10(", metric, " + ", eps, ")"),
-    y = "Density"
-  )
-
-###############################################################################
-# Top-N bar charts
-###############################################################################
-
-topN <- 20
-variant_topN <- variant_ranked %>% slice_head(n = topN)
-significant_genes_topN <- significant_genes_ranked %>% slice_head(n = topN)
-
-# Fixed right-side position for labels (independent of bar length)
-# right_pos <- max(variant_topN[[metric]], na.rm = TRUE) * 1.10  # 10% beyond longest bar
-right_pos <- max(variant_topN[[metric]], na.rm = TRUE) * 0.99
-right_pos <- max(significant_genes_topN[[metric]], na.rm = TRUE) * 0.99
-
-ggplot(variant_topN,
-       aes(x = reorder(gene_id, .data[[metric]]), y = .data[[metric]])) +
-  geom_col(fill = "#E64B35", alpha = 0.85) +
-  coord_flip() +
-  # scale_y_log10() +
-  geom_text(
-    aes(y = right_pos, label = str_trunc(Uniprot_Protein_Annotation, 60)),
-    hjust = 1.0,                # align text to the right edge
-    size = 3.2,
-    color = "black"
-  ) +
-  labs(
-    title = paste0("Top ", topN, " high-impact variant genes by ", metric),
-    x = "Gene ID",
-    y = paste0(metric)
-  )
-
-# variants with >=25% truncation or frameshift
-significant_genes_with_expression <- significant_genes_ranked %>%
-  filter(.data[[metric]]>1)
-ggplot(significant_genes_with_expression,
-       aes(x = reorder(Gene_ID, .data[[metric]]), y = .data[[metric]])) +
-  geom_col(fill = "#E64B35", alpha = 0.85) +
-  coord_flip() +
-  # scale_y_log10() +
-  geom_text(
-    aes(y = right_pos, label = str_trunc(Uniprot_Protein_Annotation, 60)),
-    hjust = 1.0,                # align text to the right edge
-    size = 3.2,
-    color = "black"
-  ) +
-  labs(
-    title = paste0(">=25% affected high-impact variant genes by ", metric),
-    x = "Gene ID",
-    y = paste0(metric)
-  )
-
-
-
-topN_table <- variant_topN %>%
-  select(gene_id, Uniprot_Protein_Annotation, Annotation, AA_pos, mean_TPM, genome_percentile_meanTPM)
 
 ###############################################################################
 ## Are genes with high-impact variants expressed differently from the rest of the genome?
@@ -226,119 +149,9 @@ ggplot() +
     fill = NULL, color = NULL, alpha = NULL
   ) +
   theme(legend.position = c(0.5,0.9))
+
+# save the plot
 plot_title <- paste0(metric, "density_distribution_variant_vs_all_genes.png")
 ggsave(paste0(plot_title, '.png'), path = plots_dir, width=3.5, height=3)
 ggsave(paste0(plot_title, '.pdf'), path = plots_dir, width=3.5, height=3)
-
-
-
-# # significant genes vs variant genes vs ALL genes
-# expr_plot_df <- bind_rows(
-#   gene_expression_rank_overall %>%
-#     mutate(category = "All genes"),
-#   variant_ranked %>%
-#     mutate(category = "Genes with high-impact variants"),
-#   variant_ranked %>%
-#     filter(gene_id %in% significant_genes_ranked$Gene_ID) %>%
-#     mutate(category = "Genes with ≥25% truncation or frameshift")
-# ) %>%
-#   mutate(
-#     category = factor(
-#       category,
-#       levels = c(
-#         "All genes",
-#         "Genes with high-impact variants",
-#         "Genes with ≥25% truncation or frameshift"
-#       )
-#     )
-#   )
-# ggplot(
-#   expr_plot_df,
-#   aes(x = log10(.data[[metric]] + eps))
-# ) +
-#   geom_histogram(
-#     aes(y = after_stat(count)),
-#     binwidth = 0.2,
-#     fill = "grey60",
-#     color = "white"
-#   ) +
-#   facet_wrap(
-#     ~ category,
-#     ncol = 1,
-#     scales = "free_y"
-#   ) +
-#   scale_x_continuous(
-#     breaks = log10(c(0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000)),
-#     labels = c("0", "0.01", "0.1", "1", "10", "100", "1k", "10k")
-#   ) +
-#   labs(
-#     x = "mRNA Expression (mean TPM)",
-#     y = "Number of Genes"
-#   ) +
-#   theme(strip.text = element_text(face = "bold"))
-# plot_title <- paste0(metric, "_density_distribution_variant_vs_all_genes_vs_genes_with_significant_truncation")
-# ggsave(paste0(plot_title, '.png'), path = plots_dir, width=4, height=6)
-# ggsave(paste0(plot_title, '.pdf'), path = plots_dir, width=4, height=6)
-
-
-###############################################################################
-## Group high-impact variant genes by GO slim terms and plot expression distributions
-###############################################################################
-# remove genes with 0 expression
-variants_nonzero <- variant_ranked %>%
-  filter(.data[[metric]] > 0)
-
-# Expand semicolon-separated GO_slim terms into long format
-variant_go_long <- variant_nonzero %>%
-  mutate(GO_slim = ifelse(is.na(GO_slim) | GO_slim == "", "NA", GO_slim)) %>%
-  tidyr::separate_rows(GO_slim, sep = ";") %>%
-  mutate(GO_slim = str_trim(GO_slim)) %>%
-  # (optional) drop empty rows created by split
-  filter(GO_slim != "")
-head(variant_go_long)
-
-variant_go_long %>% count(GO_slim, name = "n_genes_in_term") %>% arrange(desc(n_genes_in_term)) %>% head(10)
-
-# violin + boxplot of expression by GO slim term
-metric <- "median_TPM"
-q95 <- quantile(variant_go_long[[metric]], 0.95, na.rm = TRUE)
-ggplot(variant_go_long,
-       aes(x = reorder(GO_slim, .data[[metric]], FUN = median),
-           y = .data[[metric]])) +
-  geom_violin(fill = "#72B7B2", alpha = 0.35, color = NA) +
-  geom_boxplot(width = 0.15, outlier.alpha = 0.3) +
-  coord_flip() +
-  scale_y_continuous(limits = c(0, q95), # cut off outliers for better visualization
-                     expand = expansion(mult = c(0.02, 0.02))) + 
-  labs(
-    title = paste0("Expression by GO-slim term (variant genes; metric = ", metric, ")"),
-    x = "GO-slim term",
-    y = paste0(metric, " (TPM)")
-  )
-                
-
-###############################################################################
-### Compare distributions between different SNpEff annotations
-###############################################################################
-variant_ann_long <- variant_nonzero %>%
-  separate_rows(Annotation, sep = "&") %>%        # split multi-consequence entries
-  mutate(Annotation = str_trim(Annotation))
-
-metric <- "median_TPM"
-q95 <- quantile(variant_go_long[[metric]], 0.95, na.rm = TRUE)
-ggplot(variant_ann_long,
-       aes(x = reorder(Annotation, .data[[metric]], FUN = median, na.rm = TRUE),
-           y = .data[[metric]])) +
-  geom_violin(fill = "#72B7B2", alpha = 0.35, color = NA) +
-  geom_boxplot(width = 0.15, outlier.alpha = 0.3) +
-  coord_flip() +
-  scale_y_continuous(limits = c(0, q95), # cut off outliers for better visualization
-                     expand = expansion(mult = c(0.02, 0.02))) + 
-  labs(
-    title = paste0("Expression by high-impact variant consequence (metric = ", metric, ")"),
-    x = "Annotation (consequence)",
-    y = paste0(metric, " (TPM)")
-  )
-
-
 

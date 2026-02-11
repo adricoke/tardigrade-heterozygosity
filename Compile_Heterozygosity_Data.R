@@ -96,8 +96,7 @@ cds_references
 ## Variants data
 df <- as.data.frame(NULL)
 for (i in 1:length(data_files)) {
-  # i <- 8 # HiC replicate 1, FOR TESTING
-  
+
   # Read in Data
   mydata = readr::read_csv(data_files[i], col_names=FALSE)
   message(data_files[i])
@@ -153,8 +152,7 @@ for (i in 1:length(data_files)) {
 ## CDS masks
 cds_masks <- as.data.frame(NULL)
 for (i in 1:length(cds_data_files)) {
-  # i <- 1 # FOR TESTING
-  
+
   # Read in data
   mydata <- readr::read_csv(cds_data_files[i], col_names=FALSE)
   message(cds_data_files[i])
@@ -192,8 +190,6 @@ message("CDS filter applied.")
 ###############################################################################
 # Compile & Summarize Data
 ###############################################################################
-
-# bin_sizes <- c(100000) # FOR TESTING
 
 summary_df <- as.data.frame(NULL)
 for (CDS_filter in c(TRUE,FALSE)) {
