@@ -15,10 +15,6 @@ call_filter_and_annotate_variants_pipeline.sh
    - Single-end reads: ./script.sh <reference.fa> <reads.fastq[.gz]> [snpeff_database snpeff_dir]
    - Paired-end reads: ./script.sh <reference.fa> <reads_1.fastq[.gz]> <reads_2.fastq[.gz]> [snpeff_database snpeff_dir]
 
-map_cds_to_refs.sh
-- Maps transcripts against a reference genome assembly for downstream CDS-only filtering
-- Main output: cds_mask.csv
-
 Compile_Heterozygosity_Data.R
 - Compiles all_variants.csv files generated for multiple samples
 - Computes the fraction of heterozygous sites out of total sites post-filtering, both in 100kb bins across putative chromosomes and total across the entire genome
