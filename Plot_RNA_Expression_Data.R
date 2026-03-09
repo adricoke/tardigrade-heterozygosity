@@ -114,28 +114,29 @@ ggplot() +
   geom_histogram(
     data = variant_ranked,
     aes(x = log10(.data[[metric]] + eps), y = after_stat(density),
-        fill = "Genes with high-impact variants", color = "Genes with high-impact variants",
+        fill = "Genes with high-impact variants",
+        color = "Genes with high-impact variants",
         alpha = "Genes with high-impact variants"),
     binwidth = 0.2
   ) +
   # adds legend despite using different datasets
   scale_fill_manual(
     values = c(
-      "All genes" = "gray80",
-      "Genes with high-impact variants" = "grey25"
+      "All genes" = "gray70",
+      "Genes with high-impact variants" = "#009E73"
     ),
     breaks = c("All genes", "Genes with high-impact variants")  # controls legend order
+  ) +
+  scale_color_manual(
+    values = c(
+      "All genes" = "gray70",
+      "Genes with high-impact variants" = "#009E73"
+    )
   ) +
   scale_alpha_manual(
     values = c(
       "All genes" = 1.0,
-      "Genes with high-impact variants" = 0.4
-    )
-  ) +
-  scale_color_manual(
-    values = c(
-      "All genes" = "white",
-      "Genes with high-impact variants" = "black"
+      "Genes with high-impact variants" = 0.5
     )
   ) +
   scale_x_continuous(
@@ -149,8 +150,6 @@ ggplot() +
     fill = NULL, color = NULL, alpha = NULL
   ) +
   theme(legend.position = c(0.5,0.9))
-
-# save the plot
 plot_title <- paste0(metric, "density_distribution_variant_vs_all_genes.png")
 ggsave(paste0(plot_title, '.png'), path = plots_dir, width=3.5, height=3)
 ggsave(paste0(plot_title, '.pdf'), path = plots_dir, width=3.5, height=3)
