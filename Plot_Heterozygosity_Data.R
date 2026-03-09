@@ -95,6 +95,7 @@ heterozygosity_summary <- heterozygosity_summary_all_reps %>%
   summarise(
     mean_heterozygosity_fraction = mean(heterozygosity_fraction),
     sd_heterozygosity_fraction = sd(heterozygosity_fraction),
+    se_heterozygosity_fraction = sd(heterozygosity_fraction)/sqrt(n()),
     grand_mean_coverage = mean(mean_coverage),
     sd_coverage = sd(mean_coverage),
     grand_mean_quality = mean(mean_quality),
@@ -146,12 +147,14 @@ plotting_data <- heterozygosity_summary_all_reps %>%
 pseudo_sample <- heterozygosity_summary %>%
   subset(method == "individual" & CDS_filter == FALSE)
 pseudo_sample$replicate <- "Average"
-# rename pseudo-sample columns to match plotting_data
+hea# rename pseudo-sample columns to match plotting_data
 colnames(pseudo_sample) <- c("species", "reference", "method", "CDS_filter",
                              "heterozygosity_fraction", "heterozygosity_sd",
+                             "heterozygosity_se",
                              "mean_coverage", "sd_coverage",
                              "mean_quality", "sd_quality", "replicate")
 # combine 
+plotting_data$heterozygosity_se <- NA # set se to NA for individual replicates since we are not plotting error bars for them
 plotting_data <- rbind(plotting_data, pseudo_sample)
 # flag pseudo-sample for distinct appearance in plot
 plotting_data$is_combined <- plotting_data$replicate == "Average"
@@ -163,8 +166,13 @@ ggplot(plotting_data, aes(x = factor(replicate),
                           alpha = is_combined)) +
   geom_bar(stat="identity", position=position_dodge(),
            color = "grey20", aes(linetype = is_combined)) + #outline
-  # add labels to bars
-  geom_text(aes(label=sprintf("%.2f", heterozygosity_fraction*100)),
+  # error bars (se)
+  geom_errorbar(aes(ymin=heterozygosity_fraction*100 - heterozygosity_se*100,
+                    ymax=heterozygosity_fraction*100 + heterozygosity_se*100),
+                position=position_dodge(width=0.9), width=0.25, color="grey20") +
+  # add labels to bars - above error bars if present
+  geom_text(aes(y = heterozygosity_fraction*100 + coalesce(heterozygosity_se, 0)*100,
+                label=sprintf("%.2f", heterozygosity_fraction*100)),
             position=position_dodge(width=0.9),
             vjust=-0.25,
             size=3) +
@@ -176,63 +184,6 @@ ggplot(plotting_data, aes(x = factor(replicate),
   labs(x="Single-Tardigrade Replicate", y="Heterozygosity (%)", fill="Reference Genome") +
   theme(legend.position = "none")
 plot_title <- "het_per_stwgs_replicate_vs_reference_allsites"
-ggsave(paste0(plot_title, '.png'), path = plots_dir, width=3.5, height=3)
-ggsave(paste0(plot_title, '.pdf'), path = plots_dir, width=3.5, height=3)
-
-## plot coverage per rep vs average
-ggplot(plotting_data, aes(x = factor(replicate),
-                          y = mean_coverage,
-                          fill = reference,
-                          alpha = is_combined)) +
-  geom_bar(stat="identity", position=position_dodge(),
-           color = "grey20", aes(linetype = is_combined)) + #outline
-  # y limit
-  coord_cartesian(ylim=c(40, 60)) +
-  # add labels to bars
-  geom_text(aes(label=sprintf("%.2f", heterozygosity_fraction*100)),
-            position=position_dodge(width=0.9),
-            vjust=-0.25,
-            size=3) +
-  scale_fill_manual(values=c("HiC" = "#E69F00", "NCBI" = "#CC79A7"))+
-  # scale_fill_manual(values=c("HiC" = "#009E73", "NCBI" = "#CC79A7"))+
-  scale_alpha_manual(values = c(`FALSE` = 1, `TRUE` = 0.55), guide = "none") +
-  scale_linetype_manual(values = c(`FALSE` = "solid", `TRUE` = "dashed"),
-                        guide = "none") +
-  labs(x="Single-Tardigrade Replicate", y="Mean Coverage per Site", fill="Reference Genome")
-# theme(legend.position = "bottom")
-plot_title <- "coverage_per_stwgs_replicate_vs_reference_allsites"
-ggsave(paste0(plot_title, '.png'), path = plots_dir, width=5, height=3)
-ggsave(paste0(plot_title, '.pdf'), path = plots_dir, width=5, height=3)
-
-## correlate heterozygosity vs coverage across replicates
-ggplot(plotting_data, aes(x = mean_coverage,
-                          y = heterozygosity_fraction*100,
-                          color = reference)) +
-  geom_point(size=4, aes(shape = is_combined)) +
-  geom_smooth(method = "lm", se = FALSE) +
-  # # label heterozygosity values
-  # geom_text(aes(label=sprintf("%.2f", heterozygosity_fraction*100)),
-  #           vjust=0,
-  #           hjust=-0.5,
-  #           size=3) +
-  scale_x_continuous(
-    limits = c(50, 60),
-    breaks = c(50, 52.5, 55, 57.5, 60),
-    expand = expansion(add = c(1.5, 0.5))
-  ) +
-  scale_y_continuous(
-    limits = c(1, 2),
-    breaks = c(1, 1.25, 1.5, 1.75, 2),
-    expand = expansion(add = c(0.15, 0.01))
-  ) +
-  scale_color_manual(values=c("HiC" = "#009E73", "NCBI" = "#56B4E9"),
-                     labels = c("HiC" = "Hi-C", "NCBI" = "NCBI"))+
-  scale_shape_manual(values = c(`FALSE` = 16, `TRUE` = 8),
-                     labels = c('FALSE' = 'Replicates', 'TRUE' = 'Average'),
-                     guide = "none") +
-  labs(x="Mean Coverage per Site", y="Heterozygosity (%)", color="Reference Genome", shape = NULL) +
-  theme(legend.position = c(0.7, 0.85))
-plot_title <- "het_vs_coverage_stwgs_replicates_allsites"
 ggsave(paste0(plot_title, '.png'), path = plots_dir, width=3.5, height=3)
 ggsave(paste0(plot_title, '.pdf'), path = plots_dir, width=3.5, height=3)
 
