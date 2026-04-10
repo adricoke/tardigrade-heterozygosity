@@ -1,5 +1,5 @@
 # tardigrade-heterozygosity
-Heterozygosity and variant analysis for the tardigrade *Hypsibius exemplaris*, as published in XXX.
+Heterozygosity and variant analysis for the tardigrade *Hypsibius exemplaris*, as published in Coke AN, Papell LD, Burch CL, Goldstein B (2026). Modified meiosis in the tardigrade Hypsibius exemplaris maintains heterozygosity across the genome. bioRxiv 2026.03.11.711151 doi.org/10.64898/2026.03.11.711151 [preprint] 
 
 # Code Descriptions
 
