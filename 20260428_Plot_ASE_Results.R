@@ -123,10 +123,18 @@ ASEQ_variants <- ASEQ_variants %>%
   )
 head(ASEQ_variants)
 
-## generate version of ASEQ_variants where indels in REF or ALT allele are removed
-# remove rows where ALT or REF has greater than one letter
-ASEQ_variants_no_indels <- ASEQ_variants %>%
-  filter(nchar(ref) == 1 & nchar(alt) == 1)
+# add column from ase_genes to indicate in how many samples a gene has significant ASE
+ASEQ_variants <- ASEQ_variants %>%
+  left_join(ase_genes %>% select(gene, samples.marked.as.ASE), by = "gene") %>%
+  mutate(samples_marked_as_ASE = ifelse(is.na(samples.marked.as.ASE), 0, samples.marked.as.ASE)) %>%
+  select(-samples.marked.as.ASE)
+head(ASEQ_variants)
+
+
+# ## generate version of ASEQ_variants where indels in REF or ALT allele are removed
+# # remove rows where ALT or REF has greater than one letter
+# ASEQ_variants_no_indels <- ASEQ_variants %>%
+#   filter(nchar(ref) == 1 & nchar(alt) == 1)
 
 
 ### Read in SnpEff variants of interest ###
@@ -158,10 +166,10 @@ head(high_impact_variant_genes_ranked)
 ASEQ_variants_of_interest <- ASEQ_variants %>%
   # filter ASEQ list to only those variants that are also in the high-impact variants list
   inner_join(snpEff_variants, by = c("chr", "pos", "ref", "alt", "gene")) %>%
-  # add column to indicate whether each variant is in a gene with significant ASE (aka listed in ase_genes)
-  left_join(ase_genes %>% select(chr, start, end, gene) %>% distinct(), by = c("chr", "gene")) %>%
-  mutate(ASE_gene = ifelse(!is.na(start) & !is.na(end) & pos >= start & pos <= end, TRUE, FALSE)) %>%
-  select(-start, -end) %>%
+  # # add column to indicate whether each variant is in a gene with significant ASE (aka listed in ase_genes)
+  # left_join(ase_genes %>% select(chr, start, end, gene) %>% distinct(), by = c("chr", "gene")) %>%
+  # mutate(ASE_gene = ifelse(!is.na(start) & !is.na(end) & pos >= start & pos <= end, TRUE, FALSE)) %>%
+  # select(-start, -end) %>%
   # add mean_TPM info for each gene
   left_join(high_impact_variant_genes_ranked, by = "gene")
 head(ASEQ_variants_of_interest)
@@ -170,15 +178,15 @@ head(ASEQ_variants_of_interest)
 ### Combine ASEQ & SnpEff & RNA-seq info for final list of VARIANTS WITHIN GENES CONTAINING HIGH-IMPACT VARIANTS ###
 ASEQ_all_variants_within_genes_of_interest <- ASEQ_variants %>%
   # filter ASEQ list to only those genes that contain high-impact variants (aka listed in high_impact_variant_genes_ranked)
-  inner_join(high_impact_variant_genes_ranked, by = "gene") %>%
-  # add column to indicate whether each gene has significant ASE (aka listed in ase_genes)
-  left_join(ase_genes %>% select(chr, start, end, gene) %>% distinct(), by = c("chr", "gene")) %>%
-  mutate(
-    ASE_gene = ifelse(!is.na(start) & !is.na(end) & pos >= start & pos <= end, TRUE, FALSE)) %>%
-  select(-start, -end)
+  inner_join(high_impact_variant_genes_ranked, by = "gene")
+  # # add column to indicate whether each gene has significant ASE (aka listed in ase_genes)
+  # left_join(ase_genes %>% select(chr, start, end, gene) %>% distinct(), by = c("chr", "gene")) %>%
+  # mutate(
+  #   ASE_gene = ifelse(!is.na(start) & !is.na(end) & pos >= start & pos <= end, TRUE, FALSE)) %>%
+  # select(-start, -end)
 head(ASEQ_all_variants_within_genes_of_interest)
   
-  
+
 
 ###############################################################################
 ### Adjust settings for ALL plots ###
@@ -196,6 +204,14 @@ theme_update(text=element_text(size=10),
 # Step 3. Plots
 ###############################################################################
 
+### Are genes with high-impact variants more likely to show allele-specific expression (ASE) than all tested genes? ###
+
+# compare genes in ASEQ_all_variants_within_genes_of_interest vs all genes tested by ASEQ (genes in ASEQ_variants)
+# bar plot of percentage of genes in each list that have significant ASE
+
+
+
+
 ### How many genes in final show significant ASE, or not?
 
 ggplot(ASEQ_variants_of_interest)+
@@ -204,6 +220,12 @@ ggplot(ASEQ_variants_of_interest)+
   geom_text(stat='count', aes(x = ASE_gene, group = sample, label=..count..), 
             position = position_dodge(width = 0.9), vjust=-0.5)+
   labs(x = "Gene with Significant ASE?", y = "Number of Variants")
+
+
+### Are genes with high-impact variants more likely to show allele-specific expression (ASE)? ###
+
+# compare ASEQ_variants vs ASEQ_all_variants_within_genes_of_interest
+# bar plot of percentage of genes in each list that have significant ASE
 
 
 ### of the genes in this list with significant ASE, which allele is more highly expressed? (af = frequency of ALT allele)
