@@ -187,6 +187,11 @@ ASEQ_all_variants_within_genes_of_interest <- ASEQ_variants %>%
 head(ASEQ_all_variants_within_genes_of_interest)
   
 
+### add column to ASEQ_variants to indicate whether gene is a gene of interest
+ASEQ_variants <- ASEQ_variants %>%
+  left_join(high_impact_variant_genes_ranked %>% mutate(Gene_of_Interest = TRUE) %>% select(gene, Gene_of_Interest), by = "gene") %>%
+  mutate(Gene_of_Interest = ifelse(is.na(Gene_of_Interest), FALSE, Gene_of_Interest))
+head(ASEQ_variants)
 
 ###############################################################################
 ### Adjust settings for ALL plots ###
