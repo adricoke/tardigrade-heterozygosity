@@ -13,13 +13,13 @@ main_dir = getwd()
 ## Set directory to save summary data files
 summary_files_dir <- "/work/users/a/d/adricoke/single_tardigrade_seq_analysis/all_refs_heterozygosity_results"
 
-## Set bin sizes for across-genome analysis
-bin_sizes <- c(10000, 100000)
-
-message("Bin sizes:")
-for (bin_size in bin_sizes) {
-  message(message(paste0(bin_size/1000, 'kb')))
-}
+# ## Set bin sizes for across-genome analysis
+# bin_sizes <- c(10000, 100000)
+# 
+# message("Bin sizes:")
+# for (bin_size in bin_sizes) {
+#   message(message(paste0(bin_size/1000, 'kb')))
+# }
 
 ###############################################################################
 # Find File locations and treatments
@@ -76,18 +76,21 @@ replicates <- replicates[He]
 references <- references[He]
 
 
-## To filter to only CDS regions, read in cds_mask.csv files
-cds_data_files <- dir(main_dir, recursive=T, include.dirs=T, pattern="cds_mask.csv", full.names=T)
-cds_data_files
+# ## To filter to only CDS regions, read in cds_mask.csv files
+# cds_data_files <- dir(main_dir, recursive=T, include.dirs=T, pattern="cds_mask.csv", full.names=T)
+# cds_data_files
+# 
+# # Extract info from file path
+# cds_references = NULL
+# for (file in cds_data_files) {
+#   temp <- unlist(strsplit(file, "/"))
+#   cds_references <- c(cds_references, temp[10])
+# }
+# cds_references
 
-## Extract info from file path
-cds_references = NULL
-for (file in cds_data_files) {
-  temp <- unlist(strsplit(file, "/"))
-  cds_references <- c(cds_references, temp[10])
-}
-cds_references
 
+## To filter to only 4-fold degenerate sites, read in all_4_fold_degenerate_sites.bed
+four_fold_degenerate_sites_file <- "all_4_fold_degenerate_sites.bed"
 
 ###############################################################################
 # Read in ALL Data & determine genotype per site
@@ -96,6 +99,7 @@ cds_references
 ## Variants data
 df <- as.data.frame(NULL)
 for (i in 1:length(data_files)) {
+# for (i in 4) { # FOR TESTING: NCBI ref, individual rep 1
 
   # Read in Data
   mydata = readr::read_csv(data_files[i], col_names=FALSE)
@@ -149,108 +153,144 @@ for (i in 1:length(data_files)) {
 # head(df)
 
 
-## CDS masks
-cds_masks <- as.data.frame(NULL)
-for (i in 1:length(cds_data_files)) {
+# ## CDS masks
+# cds_masks <- as.data.frame(NULL)
+# for (i in 1:length(cds_data_files)) {
+# 
+#   # Read in data
+#   mydata <- readr::read_csv(cds_data_files[i], col_names=FALSE)
+#   message(cds_data_files[i])
+#   
+#   # Name columns
+#   colnames(mydata) <- c("scaffold","position","CDS_coverage")
+#   
+#   # mydata <- subset(mydata, position < bin_size*2) # 2 bins only (per scaffold) FOR TESTING
+#   
+#   # Assign reference from file path
+#   mydata$reference <- cds_references[i]
+#   
+#   # Add to combined df
+#   cds_masks <- rbind(cds_masks, mydata)
+# }
+# # head(cds_masks)
 
-  # Read in data
-  mydata <- readr::read_csv(cds_data_files[i], col_names=FALSE)
-  message(cds_data_files[i])
-  
-  # Name columns
-  colnames(mydata) <- c("scaffold","position","CDS_coverage")
-  
-  # mydata <- subset(mydata, position < bin_size*2) # 2 bins only (per scaffold) FOR TESTING
-  
-  # Assign reference from file path
-  mydata$reference <- cds_references[i]
-  
-  # Add to combined df
-  cds_masks <- rbind(cds_masks, mydata)
-}
-# head(cds_masks)
+
+## Four-fold degenerate sites
+four_fold_degenerate_sites <- read.table(four_fold_degenerate_sites_file, header=FALSE)
+colnames(four_fold_degenerate_sites) <- c("scaffold","NA","position","transcript","codon","NA")
 
 
 ###############################################################################
 # Flag each site as CDS or non-CDS (both filtered & unfiltered versions will be used for downstream analysis)
 ###############################################################################
 
-# Create unique site keys in both dataframes
+# Create unique site key for entire df
 df$site_key <- paste(df$scaffold, df$position, df$reference, sep = ":")
-cds_keys <- unique(paste(cds_masks$scaffold, cds_masks$position, cds_masks$reference, sep = ":"))
 
-# Flag each site as CDS TRUE/FALSE
-df$CDS <- df$site_key %in% cds_keys
+# # Create unique site key for CDS sites
+# cds_keys <- unique(paste(cds_masks$scaffold, cds_masks$position, cds_masks$reference, sep = ":"))
+# 
+# # Flag each site as CDS TRUE/FALSE
+# df$CDS <- df$site_key %in% cds_keys
+# 
+# message("CDS filter applied.")
+
+###############################################################################
+# Flag each site as four-fold-degenerate or not (both filtered & unfiltered versions will be used for downstream analysis)
+###############################################################################
+
+# Create unique site key for four-fold-degenerate sites
+ffd_keys <- unique(paste(four_fold_degenerate_sites$scaffold, four_fold_degenerate_sites$position, "NCBI", sep = ":"))
+
+# Flag each site as four-fold-degenerate TRUE/FALSE
+df$four_fold_degenerate <- df$site_key %in% ffd_keys
 
 # Drop the helper column
 df$site_key <- NULL
 
-message("CDS filter applied.")
+message("Four fold degenerate sites filter applied.")
 
 ###############################################################################
 # Compile & Summarize Data
 ###############################################################################
 
-summary_df <- as.data.frame(NULL)
-for (CDS_filter in c(TRUE,FALSE)) {
-  
-  # Apply CDS filter (or not)
-  if (CDS_filter == TRUE) {
-    mydata <- subset(df, CDS==TRUE)
-  }
-  else {
-    mydata <- df
-  }
-  mydata$CDS_filter <- CDS_filter
-  
-  ### Summary heterozygosity data ###
-  # Summarize data per sample
-  mysummary <- mydata %>%
-    ddply(.(species, reference, method, replicate, CDS_filter), summarize,
-          heterozygosity_fraction = mean(heterozygosity),
-          heterozygosity_sd = sd(heterozygosity),
-          mean_coverage = mean(depth),
-          sd_coverage = sd(depth),
-          mean_quality = mean(QUAL),
-          sd_quality = sd(QUAL)
-    )
-  # Combine into summary_df (save outside of loop)
-  summary_df <- rbind(summary_df, mysummary)
-  
-  ### Binned across the genome heterozygosity data ###
-  for (bin_size in bin_sizes) {
-    # subset to HiC reference only
-    binned_df <- subset(mydata, reference == "HiC")
-    # split data into bins of specified size by dividing position by bin size and rounding up
-    binned_df$bin <- ceiling(binned_df$position/bin_size)
-    binned_df <- binned_df %>%
-        # calculate heterozygosity and other metrics per bin
-        ddply(.(species, reference, method, replicate, CDS_filter, scaffold, bin), summarize,
-              sites_count = length(bin), # total number of genotyped sites per bin
-              heterozygosity_count = sum(heterozygosity),
-              heterozygosity_fraction = mean(heterozygosity),
-              heterozygosity_sd = sd(heterozygosity),
-              mean_minor_allele_freq = mean(minor_allele_frequency),
-              mean_coverage = mean(depth),
-              sd_coverage = sd(depth),
-              mean_quality = mean(QUAL),
-              sd_quality = sd(QUAL)
-        )
-      # Save binned heterozygosity data as csv (one per CDS filter & bin size combo)
-      fileName <- paste0(summary_files_dir,'/tardigrade_HiC_heterozygosity_all_samples_CDS_filter_',CDS_filter,'_',bin_size/1000,'kb_bins.csv')
-      write.csv(binned_df, fileName, row.names = FALSE)
-      
-      message(paste0("Binned data saved as ", fileName))
-  }
-}
+# ## With and without CDS filter (no FFD filter), both references, summary per sample AND per bin across the genome
+# summary_df <- as.data.frame(NULL)
+# for (CDS_filter in c(TRUE,FALSE)) {
+#   
+#   # Apply CDS filter (or not)
+#   if (CDS_filter == TRUE) {
+#     mydata <- subset(df, CDS==TRUE)
+#   }
+#   else {
+#     mydata <- df
+#   }
+#   mydata$CDS_filter <- CDS_filter
+#   
+#   ### Summary heterozygosity data ###
+#   # Summarize data per sample
+#   mysummary <- mydata %>%
+#     ddply(.(species, reference, method, replicate, CDS_filter), summarize,
+#           heterozygosity_fraction = mean(heterozygosity),
+#           heterozygosity_sd = sd(heterozygosity),
+#           mean_coverage = mean(depth),
+#           sd_coverage = sd(depth),
+#           mean_quality = mean(QUAL),
+#           sd_quality = sd(QUAL)
+#     )
+#   # Combine into summary_df (save outside of loop)
+#   summary_df <- rbind(summary_df, mysummary)
+#   
+#   ### Binned across the genome heterozygosity data ###
+#   for (bin_size in bin_sizes) {
+#     # subset to HiC reference only
+#     binned_df <- subset(mydata, reference == "HiC")
+#     # split data into bins of specified size by dividing position by bin size and rounding up
+#     binned_df$bin <- ceiling(binned_df$position/bin_size)
+#     binned_df <- binned_df %>%
+#         # calculate heterozygosity and other metrics per bin
+#         ddply(.(species, reference, method, replicate, CDS_filter, scaffold, bin), summarize,
+#               sites_count = length(bin), # total number of genotyped sites per bin
+#               heterozygosity_count = sum(heterozygosity),
+#               heterozygosity_fraction = mean(heterozygosity),
+#               heterozygosity_sd = sd(heterozygosity),
+#               mean_minor_allele_freq = mean(minor_allele_frequency),
+#               mean_coverage = mean(depth),
+#               sd_coverage = sd(depth),
+#               mean_quality = mean(QUAL),
+#               sd_quality = sd(QUAL)
+#         )
+#       # Save binned heterozygosity data as csv (one per CDS filter & bin size combo)
+#       fileName <- paste0(summary_files_dir,'/tardigrade_HiC_heterozygosity_all_samples_CDS_filter_',CDS_filter,'_',bin_size/1000,'kb_bins.csv')
+#       write.csv(binned_df, fileName, row.names = FALSE)
+#       
+#       message(paste0("Binned data saved as ", fileName))
+#   }
+# }
+# 
+# # Save summary heterozygosity data as csv (CDS filter ON/OFF both included per sample)
+# fileName <- paste0(summary_files_dir,"/heterozygosity_summary_data.csv")
+# write.csv(summary_df, fileName, row.names = FALSE)
+# 
+# message(paste0("Summary data saved as ", fileName))
 
-# Save summary heterozygosity data as csv (CDS filter ON/OFF both included per sample)
-fileName <- paste0(summary_files_dir,"/heterozygosity_summary_data.csv")
-write.csv(summary_df, fileName, row.names = FALSE)
 
-message(paste0("Summary data saved as ", fileName))
+## With four-fold-degenerate filter, no CDS filter, NCBI reference only, summary per sample only
+ffd_summary_df <- df %>%
+  subset(four_fold_degenerate == TRUE & reference == "NCBI") %>%
+  ddply(.(species, reference, method, replicate), summarize,
+        heterozygosity_fraction = mean(heterozygosity),
+        heterozygosity_sd = sd(heterozygosity),
+        mean_coverage = mean(depth),
+        sd_coverage = sd(depth),
+        mean_quality = mean(QUAL),
+        sd_quality = sd(QUAL)
+  )
 
-# head(summary_df)
-# head(binned_df)
+# Save summary heterozygosity data as csv
+fileName <- paste0(summary_files_dir,"/four_fold_degenerate_heterozygosity_summary_data.csv")
+write.csv(ffd_summary_df, fileName, row.names = FALSE)
+
+message(paste0("Four fold degenerate site summary data saved as ", fileName))
 
 
