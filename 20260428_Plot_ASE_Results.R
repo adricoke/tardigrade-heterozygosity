@@ -193,6 +193,7 @@ ASEQ_variants <- ASEQ_variants %>%
   mutate(Gene_of_Interest = ifelse(is.na(Gene_of_Interest), FALSE, Gene_of_Interest))
 head(ASEQ_variants)
 
+
 ###############################################################################
 ### Adjust settings for ALL plots ###
 ###############################################################################
@@ -211,11 +212,101 @@ theme_update(text=element_text(size=10),
 
 ### Are genes with high-impact variants more likely to show allele-specific expression (ASE) than all tested genes? ###
 
-# compare genes in ASEQ_all_variants_within_genes_of_interest vs all genes tested by ASEQ (genes in ASEQ_variants)
-# bar plot of percentage of genes in each list that have significant ASE
+# 1. Collapse to gene-level: does each gene ever show ASE?
+gene_level <- ASEQ_variants %>%
+  group_by(gene, Gene_of_Interest) %>%
+  summarise(
+    has_ASE = any(samples_marked_as_ASE > 0, na.rm = TRUE),
+    .groups = "drop"
+  )
+head(gene_level)
+
+# 2. Summarise proportions for:
+#    (a) all genes
+#    (b) Gene_of_Interest == TRUE genes
+
+plotting_data <- bind_rows(
+  gene_level %>%
+    summarise(
+      group = "All genes",
+      pct_ASE = mean(has_ASE) * 100,
+      n = n()
+    ),
+  
+  gene_level %>%
+    filter(Gene_of_Interest) %>%
+    summarise(
+      group = "High-impact genes",
+      pct_ASE = mean(has_ASE) * 100,
+      n = n()
+    )
+)
+head(plotting_data)
+
+ggplot(plotting_data, aes(x = group, y = pct_ASE, fill = group)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  geom_text(aes(label = paste0(round(pct_ASE, 1), "%\n(n=", n, ")")),
+            vjust = -0.2) +
+  labs(
+    x = NULL,
+    y = "Genes with ASE in ≥1 sample (%)",
+  ) +
+  # add space above bars
+  expand_limits(y = max(plotting_data$pct_ASE) + 2)
+
+
+## is the difference significant?
+# create contingency table
+high_impact <- gene_level %>%
+  filter(Gene_of_Interest)
+other_genes <- gene_level %>%
+  filter(!Gene_of_Interest)
+cont_table <- matrix(
+  c(
+    sum(high_impact$has_ASE),
+    sum(!high_impact$has_ASE),
+    sum(other_genes$has_ASE),
+    sum(!other_genes$has_ASE)
+  ),
+  nrow = 2,
+  byrow = TRUE
+)
+colnames(cont_table) <- c("ASE", "No_ASE")
+rownames(cont_table) <- c("High_impact", "Other")
+cont_table
+
+fisher.test(cont_table)
+chisq.test(cont_table)
+
+# difference is NOT significant (p = 0.26)
+
+
+### of the variants in ASEQ_variants_of_interest, which allele is more highly expressed? (af = ALT allele freq)
+plotting_data <- ASEQ_variants_of_interest %>%
+  # label samples as 1,2,3 instead of SRR5218xxx
+  mutate(sample = factor(sample,
+                         levels = unique(sample),
+                         labels = c("1", "2", "3"))) %>%
+  # order genes by mean af across samples
+  group_by(chr, pos, gene) %>%
+  mutate(mean_af = mean(af)) %>%
+  ungroup() %>%
+  mutate(gene = reorder(gene, mean_af)) %>%
+  # add column to indicate whether each gene has significant ASE in at least one sample
+  mutate(ASE_gene = ifelse(samples_marked_as_ASE > 0, TRUE, FALSE))
+head(plotting_data)
+# plot ALT allele freq vs gene, colored by  whether gene has significant ASE in any sample
+ggplot(plotting_data)+
+  geom_point(aes(x = gene, y = af, color = ASE_gene))+
+  scale_y_continuous(limits = c(0,1))+
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "black")+
+  scale_color_manual(values = c("TRUE" = "red", "FALSE" = "black"), labels = c("TRUE" = "Significant ASE in ≥1 sample", "FALSE" = "Not significant ASE"))+
+  labs(x = "Gene", y = "ALT Allele Frequency (af)", color = "Sample")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
 
+###############################################################################
 
 ### How many genes in final show significant ASE, or not?
 
@@ -225,12 +316,6 @@ ggplot(ASEQ_variants_of_interest)+
   geom_text(stat='count', aes(x = ASE_gene, group = sample, label=..count..), 
             position = position_dodge(width = 0.9), vjust=-0.5)+
   labs(x = "Gene with Significant ASE?", y = "Number of Variants")
-
-
-### Are genes with high-impact variants more likely to show allele-specific expression (ASE)? ###
-
-# compare ASEQ_variants vs ASEQ_all_variants_within_genes_of_interest
-# bar plot of percentage of genes in each list that have significant ASE
 
 
 ### of the genes in this list with significant ASE, which allele is more highly expressed? (af = frequency of ALT allele)
