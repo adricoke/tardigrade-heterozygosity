@@ -37,11 +37,27 @@ cbPalette <- c("#999999", "#56B4E9", "#E69F00", "#CC79A7", "#009E73")
 # Read in & Organize Data Files
 ###############################################################################
 
-### Heterozygosity Summary Data: per sample, HiC & NCBI reference genomes, each with & without CDS filter applied
+### Heterozygosity Summary Data:
+
+## per sample, HiC & NCBI reference genomes, each with & without CDS filter applied
 fileName <- "heterozygosity_summary_data.csv"
 heterozygosity_summary_all_reps = read.csv(fileName, header=T)
 head(heterozygosity_summary_all_reps)
 summary(heterozygosity_summary_all_reps)
+
+## four-fold degenerate sites filter, NCBI reference only
+fileName <- "four_fold_degenerate_heterozygosity_summary_data.csv"
+ffd_heterozygosity_summary_all_reps = read.csv(fileName, header=T)
+head(ffd_heterozygosity_summary_all_reps)
+
+# prepare to combine dataframes
+ffd_heterozygosity_summary_all_reps$CDS_filter <- FALSE
+ffd_heterozygosity_summary_all_reps$four_fold_degenerate_filter <- TRUE
+heterozygosity_summary_all_reps$four_fold_degenerate_filter <- FALSE
+
+# combine dataframes
+heterozygosity_summary_all_reps <- rbind(heterozygosity_summary_all_reps, ffd_heterozygosity_summary_all_reps)
+
 
 
 ### Binned Heterozygosity Data: HiC genome only; choose either CDS filtered or unfiltered & bin size
@@ -91,7 +107,7 @@ head(telomere_BLAST_data)
 
 ### Summary Data ###
 heterozygosity_summary <- heterozygosity_summary_all_reps %>%
-  group_by(species, reference, method, CDS_filter) %>%
+  group_by(species, reference, method, CDS_filter, four_fold_degenerate_filter) %>%
   summarise(
     mean_heterozygosity_fraction = mean(heterozygosity_fraction),
     sd_heterozygosity_fraction = sd(heterozygosity_fraction),
@@ -147,8 +163,9 @@ plotting_data <- heterozygosity_summary_all_reps %>%
 pseudo_sample <- heterozygosity_summary %>%
   subset(method == "individual" & CDS_filter == FALSE)
 pseudo_sample$replicate <- "Average"
-hea# rename pseudo-sample columns to match plotting_data
+# rename pseudo-sample columns to match plotting_data
 colnames(pseudo_sample) <- c("species", "reference", "method", "CDS_filter",
+                             "four_fold_degenerate_filter",
                              "heterozygosity_fraction", "heterozygosity_sd",
                              "heterozygosity_se",
                              "mean_coverage", "sd_coverage",
@@ -158,11 +175,15 @@ plotting_data$heterozygosity_se <- NA # set se to NA for individual replicates s
 plotting_data <- rbind(plotting_data, pseudo_sample)
 # flag pseudo-sample for distinct appearance in plot
 plotting_data$is_combined <- plotting_data$replicate == "Average"
+# add unique key for reference, ffd filter combinations
+plotting_data$key <- paste0(plotting_data$reference, "_", plotting_data$four_fold_degenerate_filter)
+
 
 ## plot heterozygosity per rep vs average
 ggplot(plotting_data, aes(x = factor(replicate),
                           y = heterozygosity_fraction*100,
-                          fill = reference,
+                          # fill = reference,
+                          fill = key,
                           alpha = is_combined)) +
   geom_bar(stat="identity", position=position_dodge(),
            color = "grey20", aes(linetype = is_combined)) + #outline
@@ -175,17 +196,23 @@ ggplot(plotting_data, aes(x = factor(replicate),
                 label=sprintf("%.2f", heterozygosity_fraction*100)),
             position=position_dodge(width=0.9),
             vjust=-0.25,
-            size=3) +
-  scale_fill_manual(values=c("HiC" = "#009E73", "NCBI" = "#56B4E9"))+
+            size=2.8) +
+  scale_fill_manual(values=c("HiC_FALSE" = "#009E73", "NCBI_FALSE" = "#56B4E9", "NCBI_TRUE" = "#CC79A7"),
+                    labels = c("Hi-C assembly", "NCBI assembly", "NCBI, four-fold degenerate sites"))+
   # scale_fill_manual(values=c("HiC" = "#009E73", "NCBI" = "#CC79A7"))+
   scale_alpha_manual(values = c(`FALSE` = 1, `TRUE` = 0.55), guide = "none") +
   scale_linetype_manual(values = c(`FALSE` = "solid", `TRUE` = "dashed"),
                         guide = "none") +
-  labs(x="Single-Tardigrade Replicate", y="Heterozygosity (%)", fill="Reference Genome") +
-  theme(legend.position = "none")
+  # expand above labels
+  scale_y_continuous(
+    expand = expansion(mult = c(NA, 0.05))
+  ) +
+  labs(x="Single-Tardigrade Replicate", y="Heterozygosity (%)", fill="Reference Genome & Filtering") +
+  theme(legend.position = "right")
 plot_title <- "het_per_stwgs_replicate_vs_reference_allsites"
-ggsave(paste0(plot_title, '.png'), path = plots_dir, width=3.5, height=3)
-ggsave(paste0(plot_title, '.pdf'), path = plots_dir, width=3.5, height=3)
+ggsave(paste0(plot_title, '.png'), path = plots_dir, width=7, height=3)
+ggsave(paste0(plot_title, '.pdf'), path = plots_dir, width=7, height=3)
+
 
 ###############################################################################
 # Plot Heterozygosity across the genome

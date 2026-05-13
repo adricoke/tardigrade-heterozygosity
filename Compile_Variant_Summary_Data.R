@@ -44,8 +44,8 @@ snpeff_fields <- c(
 )
 
 df <- as.data.frame(NULL)
-# for (i in 1:length(data_files)) {
-for (i in 3:5) { # for testing
+for (i in 1:length(data_files)) {
+# for (i in 3:5) { # for testing, H.e. bulk samples only
   
   ## Read in Data ##
   mydata = readr::read_csv(data_files[i], col_names=FALSE)
@@ -97,7 +97,7 @@ for (i in 3:5) { # for testing
   df <- rbind(df, mydata)
 }
 
-# head(df)
+head(df)
 
 ### (Optional) Save Combined Data ###
 
@@ -106,16 +106,28 @@ for (i in 3:5) { # for testing
 
 
 ###############################################################################
-# Step 3. Summarize Data: Count Variants by Category
+# Step 3. Summarize Data: Count Variants
 ###############################################################################
 
+### Count variants by category ###
 variant_type_summary <- df %>%
   count(species, replicate, Annotation, Annotation_Impact, sort = FALSE)
 # head(variant_type_summary)
 
-### Save Summary Data ###
+## Save Summary Data
 fileName <- "SnpEff_variant_counts.csv"
 write.csv(variant_type_summary, fileName, row.names = FALSE)
+
+
+### Count variants per gene, per sample ###
+per_gene_summary <- df %>%
+  filter(Annotation != "intergenic_region") %>%
+  count(species, replicate, Gene_ID, sort = FALSE)
+# head(per_gene_summary)
+
+## Save Summary Data
+fileName <- "SnpEff_per_gene_het_variant_counts.csv"
+write.csv(per_gene_summary, fileName, row.names = FALSE)
 
 ###############################################################################
 # Step 4. Find Tardigrade Variants that are Shared Across Samples

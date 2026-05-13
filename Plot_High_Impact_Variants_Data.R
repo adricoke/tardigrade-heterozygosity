@@ -8,6 +8,7 @@ library(gridExtra)
 library(data.table)
 library(dplyr)
 library(ggtext)
+library(ggpattern)
 
 ###############################################################################
 # Specify File locations
@@ -125,7 +126,7 @@ ggplot(plot_df, aes(x = reorder(Annotation_simple, n_genes))) +
   expand_limits(y = max(plot_df$n_variants) * 1.2) +
   labs(
     x = NULL,
-    y = "Numbers of genes"
+    y = "Number of genes"
     # title = "Genes with predicted high-impact heterozygous variants"
   )
 
@@ -193,27 +194,26 @@ y_max <- max(nonsense_significant$WT_AA_length, na.rm = TRUE)
 ggplot(nonsense_significant)+
   # geom_col(aes(x = Gene_ID_short, y = WT_AA_length), fill = "red", width = 0.8)+
   geom_col(aes(x = Gene_ID_short, y = WT_AA_length, fill = mean_TPM), width = 0.8)+
-  geom_col(aes(x = Gene_ID_short, y = nonsense_AA_length), fill = "darkgrey", width = 0.8)+
+  # geom_col(aes(x = Gene_ID_short, y = nonsense_AA_length), fill = "darkgrey", width = 0.8)+
+  geom_col_pattern(
+    aes(x = Gene_ID_short, y = nonsense_AA_length),
+    pattern = "stripe",
+    pattern_fill = "black",
+    pattern_angle = 45,
+    pattern_density = 0.05,
+    pattern_spacing = 0.015,
+    fill = NA,
+    color = "black",
+    linewidth = 0.4,
+    width = 0.8
+  ) +
   geom_col(aes(x = Gene_ID_short, y = WT_AA_length), color = "black", fill = NA, width = 0.8)+
   # add dotted line(s) to indicate mean_TPM thresholds (computed above)
-  # geom_vline(xintercept = threshold_0_pos, linetype = "dotted") +  # 0
   geom_vline(xintercept = threshold_1_pos, linetype = "dotted") +  # 1
-  # geom_vline(xintercept = threshold_10_pos, linetype = "dotted") +  # 10
-  # geom_vline(xintercept = threshold_100_pos, linetype = "dotted") +  # 100
   # label with mean_TPM
   # geom_text(aes(x = Gene_ID_short, y = WT_AA_length + 50, label = round(mean_TPM, 1)), size = 2.5)+
   coord_flip()+
-  # label dotted lines
-  # geom_text(aes(x = threshold_0_pos + 0.7, y = y_max * 0.8),
-  #           label = "> 0", hjust = 0, size = 3) +
-  # geom_text(aes(x = threshold_1_pos + 0.7, y = y_max * 0.8),
-  #           label = "> 1", hjust = 0, size = 3) +
-  # geom_text(aes(x = threshold_10_pos + 0.7, y = y_max * 0.8),
-  #           label = "> 10", hjust = 0, size = 3) +
-  # geom_text(aes(x = threshold_10_pos + 0.7, y = y_max * 0.8),
-  #           label = "mean TPM:", hjust = 0.2, vjust = -0.8, size = 3) +
-  # geom_text(aes(x = threshold_100_pos + 0.7, y = y_max * 0.7),
-  #           label = "mean TPM > 100", hjust = 0.2, vjust = -0.5, size = 3) +
+  # label dotted line(s)
   geom_text(aes(x = threshold_1_pos + 0.7, y = y_max * 0.7),
             label = "mean TPM > 1", hjust = 0, size = 3) +
   scale_fill_gradient(trans = "log10", low = "lightpink", high = "red", na.value = "white",
@@ -224,7 +224,7 @@ ggplot(nonsense_significant)+
   scale_y_continuous(
     breaks = c(0,500,1000,1500,2000))+
   labs(y = "Nonsense vs Wildtype Protein Length (AA)",
-       x = "Locus ID (BV898_#)", fill = "mRNA Expression")
+       x = "Locus ID (BV898_#)", fill = "mRNA Abundance")
 
 # save
 plot_title <- "nonsense_gene_lengths_significant_truncation_only"
@@ -291,27 +291,26 @@ y_max <- max(frameshift_significant$WT_AA_length, na.rm = TRUE)
 ggplot(frameshift_significant)+
   # geom_col(aes(x = Gene_ID_short, y = WT_AA_length), fill = "blue", width = 0.8)+
   geom_col(aes(x = Gene_ID_short, y = WT_AA_length, fill = mean_TPM), width = 0.8)+
-  geom_col(aes(x = Gene_ID_short, y = nonsense_AA_length), fill = "darkgrey", width = 0.8)+
+  # geom_col(aes(x = Gene_ID_short, y = nonsense_AA_length), fill = "darkgrey", width = 0.8)+
+  geom_col_pattern(
+    aes(x = Gene_ID_short, y = nonsense_AA_length),
+    pattern = "stripe",
+    pattern_fill = "black",
+    pattern_angle = 45,
+    pattern_density = 0.05,
+    pattern_spacing = 0.015,
+    fill = NA,
+    color = "black",
+    linewidth = 0.4,
+    width = 0.8
+  ) +
   geom_col(aes(x = Gene_ID_short, y = WT_AA_length), color = "black", fill = NA, width = 0.8)+
   # add dotted line(s) to indicate mean_TPM thresholds (computed above)
-  # geom_vline(xintercept = threshold_0_pos, linetype = "dotted") +  # 0
   geom_vline(xintercept = threshold_1_pos, linetype = "dotted") +  # 1
-  # geom_vline(xintercept = threshold_10_pos, linetype = "dotted") +  # 10
-  # geom_vline(xintercept = threshold_100_pos, linetype = "dotted") +  # 100
   # label with mean_TPM
   # geom_text(aes(x = Gene_ID_short, y = WT_AA_length + 50, label = round(mean_TPM, 1)), size = 2.5)+
   coord_flip()+
-  # label dotted lines
-  # geom_text(aes(x = threshold_0_pos + 0.7, y = y_max * 0.8),
-  #           label = "> 0", hjust = 0, size = 3) +
-  # geom_text(aes(x = threshold_1_pos + 0.7, y = y_max * 0.8),
-  #           label = "> 1", hjust = 0, size = 3) +
-  # geom_text(aes(x = threshold_10_pos + 0.7, y = y_max * 0.8),
-  #           label = "> 10", hjust = 0, size = 3) +
-  # geom_text(aes(x = threshold_10_pos + 0.7, y = y_max * 0.8),
-  #           label = "mean TPM:", hjust = 0.2, vjust = -0.8, size = 3) +
-  # geom_text(aes(x = threshold_100_pos + 0.7, y = y_max * 0.7),
-  #           label = "mean TPM > 100", hjust = 0.2, vjust = -0.5, size = 3) +
+  # label dotted line(s)
   geom_text(aes(x = threshold_1_pos + 0.7, y = y_max * 0.7),
             label = "mean TPM > 1", hjust = 0, size = 3) +
   scale_y_continuous(
@@ -322,7 +321,7 @@ ggplot(frameshift_significant)+
                       labels = c("0.1", "1", "10", "100", "1000 TPM")) +
   theme(legend.position = c(0.8, 0.12), legend.text = element_text(size = 7)) +
   labs(y = "Pre-frameshift vs Wildtype Protein Length (AA)",
-       x = "Locus ID (BV898_#)", fill = "mRNA Expression")
+       x = "Locus ID (BV898_#)", fill = "mRNA Abundance")
 
 # save
 plot_title <- "frameshift_gene_lengths_significant_proportion_only"

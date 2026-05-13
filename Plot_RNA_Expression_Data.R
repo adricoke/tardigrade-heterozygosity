@@ -19,7 +19,9 @@ gene_expression_rank_overall <- read.csv("gene_expression_rank_overall.csv")
 fileName <- "select_high_impact_variants.csv"
 # genes_with_confident_high_impact_variants <- read.csv("../NCBI_genome_results/20251204_select_high_impact_variants_with_goslim.csv") %>%
 genes_with_confident_high_impact_variants <- read.csv(paste0("../NCBI_genome_results/", fileName)) %>%
-  select(Gene_ID, Annotation, AA_pos, Uniprot_Protein_Annotation, Gene_Ontology, GO_slim)
+  select(Gene_ID, Annotation, AA_pos
+         # Uniprot_Protein_Annotation, Gene_Ontology, GO_slim
+         )
 # head(genes_with_confident_high_impact_variants)
 
 # genes_with_significant_truncations <- read.csv("../NCBI_genome_results/high_impact_variants_significant_truncations.csv")
@@ -42,7 +44,9 @@ variant_ranked <- gene_expression_rank_overall %>%
   # attach your annotations for context
   left_join(
     genes_with_confident_high_impact_variants %>%
-      select(Gene_ID, Annotation, Uniprot_Protein_Annotation, Gene_Ontology, GO_slim, AA_pos),
+      select(Gene_ID, Annotation,
+             # Uniprot_Protein_Annotation, Gene_Ontology, GO_slim,
+             AA_pos),
     by = c("gene_id" = "Gene_ID")
   ) %>%
   arrange(desc(.data[[metric]])) %>%
@@ -76,13 +80,15 @@ variant_avg_percentile <- gene_tpm_ranks_per_sample %>%
 variant_ranked <- variant_ranked %>%
   left_join(variant_avg_percentile, by = "gene_id")
 
+head(variant_ranked)
+
 # Save the ranked table
 out_rank_csv <- "high_impact_variant_genes_ranked_by_expression.csv"
 write.csv(variant_ranked, out_rank_csv, row.names = FALSE)
 message("[INFO] Saved ranked variant table -> ", out_rank_csv)
 
 ###############################################################################
-# Analysis Plots
+# Plot Aesthetics
 ###############################################################################
 
 ### Adjust settings for ALL plots ###
@@ -145,7 +151,7 @@ ggplot() +
   ) +
   labs(
     # title = paste0("Distribution of variant-containing vs all genes expression (", metric, ")"),
-    x = "mRNA Expression (mean TPM)",
+    x = "mRNA Abundance (mean TPM)",
     y = "Proportion of Genes",
     fill = NULL, color = NULL, alpha = NULL
   ) +

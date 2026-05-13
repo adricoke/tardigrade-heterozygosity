@@ -83,6 +83,10 @@ gene_intervals <- genes_all %>%
          end   = as.numeric(end))
 head(gene_intervals)
 
+gene_intervals$gene_length <- gene_intervals$end - gene_intervals$start + 1
+
+# save gene_intervals as csv
+write.csv(gene_intervals, "Hypsibius_exemplaris_gene_intervals.csv", row.names = FALSE)
 
 ### PER-VARIANT ASEQ DATA ###
 

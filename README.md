@@ -64,6 +64,12 @@ OrthoDB_Loci_Heterozygosity_Plotting.R
 Make_Pedigrees.R
 - Plotting code to generate tardigrade family tree pedigrees of allele detection from spreadsheet-input data
 
+Analyze_Heterozygosity_at_Chr_Ends.R
+- Analyze Plasmidsaurus Premium PCR sequencing results to determine how many sites out of the total PCR product lengths are heterozygous (aka differ between alleles).
+
+Chr_Ends_Heterozygosity_Plotting.R
+- Used to generate bar plot of heterozygosity per PCR-sequenced locus. Reads in output file from Analyze_Heterozygosity_at_Chr_Ends.R
+
 # References for Tools Used
 
 Li, H. Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM. Preprint at https://doi.org/10.48550/arXiv.1303.3997 (2013). 
