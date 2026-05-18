@@ -1,5 +1,5 @@
 # tardigrade-heterozygosity
-Heterozygosity and variant analysis for the tardigrade *Hypsibius exemplaris*, as published in Coke AN, Papell LD, Burch CL, Goldstein B (2026). Modified meiosis in the tardigrade Hypsibius exemplaris maintains heterozygosity across the genome. bioRxiv 2026.03.11.711151 doi.org/10.64898/2026.03.11.711151 [preprint] 
+Heterozygosity and variant analysis for the tardigrade *Hypsibius exemplaris*, as in preprint: Coke AN, Papell LD, Burch CL, Goldstein B (2026). Modified meiosis in the tardigrade Hypsibius exemplaris maintains heterozygosity across the genome. bioRxiv 2026.03.11.711151 doi.org/10.64898/2026.03.11.711151 [preprint] 
 
 # Code Descriptions
 
@@ -15,10 +15,15 @@ call_filter_and_annotate_variants_pipeline.sh
    - Single-end reads: ./script.sh <reference.fa> <reads.fastq[.gz]> [snpeff_database snpeff_dir]
    - Paired-end reads: ./script.sh <reference.fa> <reads_1.fastq[.gz]> <reads_2.fastq[.gz]> [snpeff_database snpeff_dir]
 
+identify_synonymous_sites.R
+- Identifies four-fold synonymous sites from transcript annotations
+- Outputs a .bed file of four-fold generate sites for a subset of transcripts (depending on job submission inputs)
+- Combine all sites for downstream use with: $ cat *.bed > all_4_fold_degenerate_sites.bed
+
 Compile_Heterozygosity_Data.R
 - Compiles all_variants.csv files generated for multiple samples
 - Computes the fraction of heterozygous sites out of total sites post-filtering, both in 100kb bins across putative chromosomes and total across the entire genome
-- When applicable, applies CDS-only filter from cds_mask.csv
+- Calculates heterozygosity at all sites and at four-fold degenerate sites only (the latter requires all_4_fold_degenerate_sites.bed file)
 - Main outputs: heterozygosity_summary_data.csv and tardigrade_HiC_heterozygosity_all_samples_CDS_filter_FALSE_100kb_bins.csv
 
 Plot_Heterozygosity_Data.R
@@ -34,7 +39,6 @@ Compile_Variant_Summary_Data.R
 Plot_High_Impact_Variants_Data.R
 - Reads in select_high_impact_variants.csv
 - Makes plots to categorize and analyze select high-impact variants
-
 
 **Analyze RNA expression of select variants:**
 
@@ -52,6 +56,8 @@ Plot_RNA_Expression_Data.R
 - Reads in select_high_impact_variants.csv from Compile_Variant_Summary_Data.R
 - Plots overlaid distribution of RNA expression values to compare select high-impact variants and all genes in genome
 
+allele_specific_analysis_pipeline.sh
+- Uses ASEQ to analyze allele-specific expression of transcripts with heterozygous variants of interest
 
 **Analyze results of PCR sequencing and inheritance tracking of select loci:**
 
@@ -83,3 +89,5 @@ Patro, R., Duggal, G., Love, M. I., Irizarry, R. A. & Kingsford, C. Salmon provi
 Soneson, C., Love, M. I. & Robinson, M. D. Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences. Preprint at https://doi.org/10.12688/f1000research.7563.2 (2016). 
 
 Kuznetsov, D. et al. OrthoDB v11: annotation of orthologs in the widest sampling of organismal diversity. Nucleic Acids Research 51, D445–D451 (2023). 
+
+Romanel A, Lago S, Prandi D, Sboner A, Demichelis F. 2015. ASEQ: fast allele-specific studies from next-generation sequencing data. BMC Med Genomics. 8(1):9.
