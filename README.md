@@ -59,6 +59,10 @@ Plot_RNA_Expression_Data.R
 allele_specific_analysis_pipeline.sh
 - Uses ASEQ to analyze allele-specific expression of transcripts with heterozygous variants of interest
 
+High_Impact_Variants_ASE_Analysis.R
+- Statistical analysis of allele-specific expression of genes containing high-impact variants
+- Reads in outputs from allele_specific_analysis_pipeline.sh and Compile_Variant_Summary_Data.R
+
 **Analyze results of PCR sequencing and inheritance tracking of select loci:**
 
 parse_OrthoDB_results,ipynb
