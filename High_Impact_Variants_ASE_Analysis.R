@@ -141,15 +141,15 @@ z <- high_impact_variants[, .(
   median_coverage = median(cov),
   median_ALT_allele_frequency = median(alt_AF),
   median_p = median(p_value)
-), by = .(gene,pos)]
+), by = .(gene,chr,pos)]
 
 head(z)
-
-fwrite(z, file="high_impact_variants_ASE_data_and_statistics.csv")
 
 z2 <- z[n_samples==3]
 nrow(z2)
 #48
+
+fwrite(z2, file="high_impact_variants_ASE_data_and_statistics.csv")
 
 minor_ase <- nrow(z2[n_minor == 3 & median_p < p_cutoff])
 minor_ase
